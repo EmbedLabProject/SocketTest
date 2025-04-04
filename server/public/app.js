@@ -10,6 +10,7 @@ const userList = document.querySelector('.user-list')
 const roomList = document.querySelector('.room-list')
 const chatDisplay = document.querySelector('.chat-display')
 
+// send message to server
 function sendMessage(e){
     e.preventDefault()
     if(msgInput.value && nameInput.value && chatRoom.value){
@@ -18,12 +19,12 @@ function sendMessage(e){
             text: msgInput.value,
             
         })
-        console.log("message is send")
         msgInput.value = ""
     }
     msgInput.focus()
 }
 
+// send room name that user want to join to server
 function enterRoom(e){
     e.preventDefault()
     if(nameInput.value && chatRoom.value){
@@ -36,22 +37,61 @@ function enterRoom(e){
     }
 }
 
+
+// LISTEN ON FRONTEND
+
+// listen for submit message event
 document.querySelector('.form-msg')
     .addEventListener('submit', sendMessage)
 
+// listen for join room event
 document.querySelector('.form-join')
     .addEventListener('submit', enterRoom)
 
+// listen for typing event
 msgInput.addEventListener('keypress', () => {
         socket.emit('activity', nameInput.value)
     })
 
-// Listen for message
+
+
+// LISTEN FROM SERVER
+
+// listen for a message
 socket.on('message', (data)=> {
-    
     activity.textContent = ""
     const {name, text, time} = data
-    console.log(`${text} from ${name}`)
+    showMessage(name, text, time)
+})
+
+// listen for typing event from other user
+let activityTimer
+socket.on("activity", (name) => {
+    activity.textContent = `${name} is typing...`
+
+    // clear after 10 sec
+    clearTimeout(activityTimer)
+    activityTimer = setTimeout(() => {
+        activity.textContent = ""
+    }, 10000)
+})
+
+// listen for user list in the room
+socket.on('userList', ({users}) =>{
+    showUsers(users)
+})
+
+// listen for active room in the server
+socket.on('roomList', ({rooms}) =>{
+    showRooms(rooms)
+})
+
+
+
+// FUNCTION FOR SHOWING INCOMING DATA TO FRONEND
+
+// show message to user
+function showMessage(name, text, time){
     const li = document.createElement('li')
     li.className = 'post'
     if(name === nameInput.value) li.className = 'post post--right'
@@ -73,27 +113,9 @@ socket.on('message', (data)=> {
     document.querySelector('.chat-display').appendChild(li)
 
     chatDisplay.scrollTop = chatDisplay.scrollHeight
-})
+}
 
-let activityTimer
-socket.on("activity", (name) => {
-    activity.textContent = `${name} is typing...`
-
-    // clear after 10 sec
-    clearTimeout(activityTimer)
-    activityTimer = setTimeout(() => {
-        activity.textContent = ""
-    }, 10000)
-})
-
-socket.on('userList', ({users}) =>{
-    showUsers(users)
-})
-
-socket.on('roomList', ({rooms}) =>{
-    showRooms(rooms)
-})
-
+// show user list in the room
 function showUsers(users){
     userList.textContent = ''
     if(users){
@@ -107,6 +129,8 @@ function showUsers(users){
     }
 }
 
+
+// show active room in the server
 function showRooms(rooms){
     roomList.textContent = ''
     if(rooms){

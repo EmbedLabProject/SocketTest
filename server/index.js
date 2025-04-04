@@ -13,13 +13,11 @@ const app = express()
 
 app.use(express.static(path.join(__dirname, "public")))
 
-
-
 const expressServer = app.listen(PORT, () =>{
     console.log(`listening on port ${PORT}`)
 })
 
-// state
+// user state (collect all user in the socket)
 const UserState = {
     users: [],
     setUsers: function (newUserArray) {
@@ -27,94 +25,100 @@ const UserState = {
     }
 }
 
-
 const io = new Server(expressServer, {
     cors:{
         origin: process.env.NODE_ENV === "production" ? false : 
-        ["http://localhost:5500", "http://127.0.0.1:5500"]
+        ["http://localhost:3500", "http://127.0.0.1:3500"]
     }
 })
 
 io.on('connection', socket => {
     console.log(`User ${socket.id} connected`)
 
-    // Upon connection - only to user
+    // upon connection only to user
     socket.emit('message', buildMsg(ADMIN, "Welcome to Chat App!"))
 
+    // when user are joining the room
     socket.on('enterRoom', ({name, room}) =>{
+
         //leave prev room
         console.log(`${name} enter room ${room}`)
         const prevRoom = getUser(socket.id)?.room
 
+        // notify user in prev room about leaving the room
         if(prevRoom){
             socket.leave(prevRoom)
             io.to(prevRoom).emit('message', buildMsg(ADMIN, `${name} has left the room`))
         }
 
+        // cannot update previous room users list until after the state update in activate user
+
+        // update all user information (mainly fot room)
         const user = activateUser(socket.id, name, room)
 
-        // cannot update previous room users list until after the state update in activate user
+        // update userlist in prev room
         if(prevRoom){
             io.to(prevRoom).emit('userList', {
                 users: getUserInRoom(prevRoom)
             })
         }
 
-        // join room
+        // user join room
         socket.join(user.room)
 
-        // To user who joined
+        // notify to user who joined the room
         socket.emit('message', buildMsg(ADMIN, `You have joined the ${user.room} chat room`))
 
-        // To everyone else
+        // notify to everyone else in the room
         socket.broadcast.to(user.room).emit('message', buildMsg(ADMIN, `${user.name} has joined the room`))
 
-        // Update user list for room
+        // update user list for this room
         io.to(user.room).emit('userList', {
             users: getUserInRoom(user.room)
         })
 
-        // Update room list for evryone
+        // update room list for everyone
         io.emit('roomList', {
             rooms: getAllActiveRoom()
         })
     })
-    // Upon connection - only to all others
-    // socket.broadcast.emit('message', `User ${socket.id.substring(0,5)} connected`)
 
-    // When user disconnects - to all others
+    // when user disconnects 
     socket.on('disconnect', () => {
+
+        // update user info
         const user = getUser(socket.id)
         userLeavesApp(socket.id)
         
         if(user){
+            // notify to all others in the room
             io.to(user.room).emit('message', buildMsg(ADMIN, `${user.name} has left the room`))
 
+            // update user list
             io.to(user.room).emit('userList', {
                 users: getUserInRoom(user.room)
             })
 
+            // update room list
             io.emit('roomList', {
                 rooms: getAllActiveRoom()
             })
             
         }
+
         console.log(`User ${socket.id} disconnected`)
     })
 
-    // Listening for a message event
+    // listening for a message event
     socket.on('message', ({name, text}) =>{
-        
         const room = getUser(socket.id)?.room
         if(room){
-            console.log(`${text} from ${name} in ${room}`)
             io.to(room).emit('message', buildMsg(name,text))
         }
     })
     
-    // Listen for activity
+    // listen for activity
     socket.on('activity', (name) => {
-        
         const room = getUser(socket.id)?.room
         if(room){
             socket.broadcast.to(room).emit('activity', name)
@@ -122,6 +126,8 @@ io.on('connection', socket => {
     })
 })
 
+
+// Message format
 function buildMsg(name, text){
     return {
         name,
