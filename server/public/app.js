@@ -9,6 +9,8 @@ const activity = document.querySelector('.activity')
 const userList = document.querySelector('.user-list')
 const roomList = document.querySelector('.room-list')
 const chatDisplay = document.querySelector('.chat-display')
+let username = ""
+
 
 // send message to server
 function sendMessage(e){
@@ -28,6 +30,8 @@ function sendMessage(e){
 function enterRoom(e){
     e.preventDefault()
     if(nameInput.value && chatRoom.value){
+        username = nameInput.value
+        console.log(username)
         socket.emit(
             'enterRoom', {
                 name: nameInput.value,
@@ -92,23 +96,45 @@ socket.on('roomList', ({rooms}) =>{
 
 // show message to user
 function showMessage(name, text, time){
+    console.log(name);
     const li = document.createElement('li')
     li.className = 'post'
     if(name === nameInput.value) li.className = 'post post--right'
-    if(name !== nameInput.value && name !== 'Admin') li.className = 'post post--left'
+    if(name !== nameInput.value && name !== 'Admin'){
+        li.className = 'post post--left'
+    } 
     if (name !== 'Admin') {
-        li.innerHTML = `<div class="post__header ${name===
-        nameInput.value 
-        ? 'post__header--user'
-        : 'post__header--reply'
-        }">
-        <span class="post__header--name">${name}</span>
-        <span class="post__header--time">${time}</span>
-        </div>
-        <div class="post__text">${text}</div>
-        `
+        if (name === username){
+            li.innerHTML = `<div class="post__header ${name===
+                nameInput.value 
+                ? 'post__header--user'
+                : 'post__header--reply'
+                } flex flex-row justify-end w-full">
+                <span class="post__header--name font-normal text-sm">You</span>
+                </div>
+                <div class="post__text flex flex-row mt-1 my-3 gap-2 items-end justify-end w-full">
+                <p class="post__header--time font-light text-xs">${time}</p>
+                <p class="w-fit max-w-48 bg-green-300 rounded-lg px-3 py-1 break-all">${text}</p>
+                </div>
+                `
+        }
+        else {
+            li.innerHTML = `<div class="post__header ${name===
+                nameInput.value 
+                ? 'post__header--user'
+                : 'post__header--reply'
+                } flex flex-row justify-start w-full">
+                <span class="post__header--name font-normal text-sm">${name}</span>
+                </div>
+                <div class="post__text flex flex-row mt-1 my-3 gap-2 items-end justify-start w-full">
+                <p class="w-fit bg-white rounded-lg px-3 py-1">${text}</p>
+                <p class="post__header--time font-light text-xs">${time}</p>
+                </div>
+                `
+        }
+        
     } else{
-        li.innerHTML = `<div class="post__text">${text}</div>`
+        li.innerHTML = `<div class="flex post__text w-full justify-center mt-3"><p class="w-fit bg-slate-500 px-3 py-1 rounded-full text-white">${text}</p></div>`
     }
     document.querySelector('.chat-display').appendChild(li)
 
