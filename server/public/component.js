@@ -22,6 +22,14 @@ export function getMessageComponent(id, userId, name, text, time) {
   return li;
 }
 
+export function getSuperBoardcastComponent(text) {
+  const box = document.createElement("div");
+  box.className =
+    "w-fit bg-blue-700 rounded-3xl px-3 py-1 break-all text-white mt-4 transition-all duration-500 transform -translate-y-full opacity-0 pointer-events-auto";
+  box.innerHTML = text;
+  return box;
+}
+
 export function getBroadcastComponent(text) {
   const li = document.createElement("li");
   li.innerHTML = `<div class="flex post__text w-full justify-center mt-3"><p class="w-fit bg-slate-500 px-3 py-1 rounded-full text-white">${text}</p></div>`;

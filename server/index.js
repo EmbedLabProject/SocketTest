@@ -110,11 +110,15 @@ io.on("connection", (socket) => {
     const room = getUser(socket.id)?.room;
     const oldName = getUser(socket.id)?.name;
 
+    if (oldName === "") {
+      io.emit("superBroadcast", buildMsg("", "", `${name} has connected`));
+    }
+
     const user = activateUser(socket.id, name, room);
 
     if (room) {
-      io.to(room).emit(
-        "broadcast",
+      io.emit(
+        "superBroadcast",
         buildMsg("", "", `${oldName} has change name to ${name}`)
       );
     }
@@ -138,6 +142,13 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     // update user info
     const user = getUser(socket.id);
+    if (user.name !== "") {
+      io.emit(
+        "superBroadcast",
+        buildMsg("", "", `${user.name} has disconnected`)
+      );
+    }
+
     userLeavesApp(socket.id);
 
     if (user) {

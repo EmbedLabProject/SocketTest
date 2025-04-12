@@ -3,6 +3,7 @@ import {
   getMessageComponent,
   getRoomList,
   getUserList,
+  getSuperBoardcastComponent,
 } from "./component.js";
 
 const socket = io("ws://localhost:3500");
@@ -15,6 +16,7 @@ const userGroupList = document.querySelector(".userGroup-list");
 const userList = document.querySelector(".user-list");
 const roomList = document.querySelector(".room-list");
 const chatDisplay = document.querySelector(".chat-display");
+const superBroadcast = document.getElementById("superBroadcast-container");
 
 let userName = "";
 let userId = "";
@@ -73,6 +75,12 @@ socket.on("broadcast", (data) => {
   activity.textContent = "";
   const { text } = data;
   showBroadcast(text);
+});
+
+socket.on("superBroadcast", (data) => {
+  activity.textContent = "";
+  const { text } = data;
+  showSuperBroadcast(text);
 });
 
 // HANDLER: Listen for typing event from other user
@@ -139,4 +147,22 @@ function showUsers(users) {
 // UPDATE: Show active room in the server
 function showRooms(rooms) {
   roomList.innerHTML = getRoomList(rooms);
+}
+
+function showSuperBroadcast(text, duration = 3000) {
+  const box = getSuperBoardcastComponent(text);
+  superBroadcast.prepend(box);
+
+  requestAnimationFrame(() => {
+    box.classList.remove("-translate-y-full", "opacity-0");
+    box.classList.add("translate-y-0", "opacity-100");
+  });
+
+  setTimeout(() => {
+    box.classList.remove("translate-y-0", "opacity-100");
+    box.classList.add("-translate-y-full", "opacity-0");
+    setTimeout(() => {
+      box.remove();
+    }, 500);
+  }, duration);
 }
