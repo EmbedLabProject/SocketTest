@@ -1,107 +1,118 @@
-import { getMessageComponent, getRoomList, getUserList } from "./component.js"
+import {
+  getBroadcastComponent,
+  getMessageComponent,
+  getRoomList,
+  getUserList,
+} from "./component.js";
 
-const socket = io('ws://localhost:3500')
+const socket = io("ws://localhost:3500");
 
-const msgInput = document.querySelector('#message')
-const nameInput = document.querySelector('#name')
-const chatRoom = document.querySelector('#room')
-const activity = document.querySelector('.activity')
-const userList = document.querySelector('.user-list')
-const roomList = document.querySelector('.room-list')
-const chatDisplay = document.querySelector('.chat-display')
+const msgInput = document.querySelector("#message");
+const nameInput = document.querySelector("#name");
+const chatRoom = document.querySelector("#room");
+const activity = document.querySelector(".activity");
+const userList = document.querySelector(".user-list");
+const roomList = document.querySelector(".room-list");
+const chatDisplay = document.querySelector(".chat-display");
 
-let username = "User"
+let username = "User";
 
 // ## SOCKET SECTION ##
 
 // SENDER: Send message to server
-function sendMessage(e){
-    e.preventDefault()
-    if(msgInput.value && nameInput.value && chatRoom.value){
-        socket.emit('message', {
-            name: nameInput.value,
-            text: msgInput.value,
-        })
-        msgInput.value = ""
-    }
-    msgInput.focus()
+function sendMessage(e) {
+  e.preventDefault();
+  if (msgInput.value && nameInput.value && chatRoom.value) {
+    socket.emit("message", {
+      name: nameInput.value,
+      text: msgInput.value,
+    });
+    msgInput.value = "";
+  }
+  msgInput.focus();
 }
 
 // SENDER: Send room name that user want to join to server
-function enterRoom(e){
-    e.preventDefault()
-    if(nameInput.value && chatRoom.value){
-        username = nameInput.value
-        socket.emit(
-            'enterRoom', {
-                name: nameInput.value,
-                room: chatRoom.value
-            }
-        )
-    }
+function enterRoom(e) {
+  e.preventDefault();
+  if (nameInput.value && chatRoom.value) {
+    username = nameInput.value;
+    socket.emit("enterRoom", {
+      name: nameInput.value,
+      room: chatRoom.value,
+    });
+  }
 }
 
 // HANDLER: Listen for a message
-socket.on('message', (data)=> {
-    activity.textContent = ""
-    const {name, text, time} = data
-    showMessage(name, text, time)
-})
+socket.on("message", (data) => {
+  console.log("meessage");
+  activity.textContent = "";
+  const { name, text, time } = data;
+  showMessage(name, text, time);
+});
+
+socket.on("broadcast", (data) => {
+  console.log("broadcast");
+  activity.textContent = "";
+  const { text } = data;
+  showBroadcast(text);
+});
 
 // HANDLER: Listen for typing event from other user
-let activityTimer
+let activityTimer;
 socket.on("activity", (name) => {
-    activity.textContent = `${name} is typing...`
+  activity.textContent = `${name} is typing...`;
 
-    // Clear after 10 sec passed
-    clearTimeout(activityTimer)
-    activityTimer = setTimeout(() => {
-        activity.textContent = ""
-    }, 10000)
-})
+  // Clear after 10 sec passed
+  clearTimeout(activityTimer);
+  activityTimer = setTimeout(() => {
+    activity.textContent = "";
+  }, 10000);
+});
 
 // HANDLER: Listen for user list in the room
-socket.on('userList', ({users}) =>{
-    showUsers(users)
-})
+socket.on("userList", ({ users }) => {
+  showUsers(users);
+});
 
 // HANDLER: Listen for active room in the server
-socket.on('roomList', ({rooms}) =>{
-    showRooms(rooms)
-})
-
+socket.on("roomList", ({ rooms }) => {
+  showRooms(rooms);
+});
 
 // ## USER INTERFACE SECTION ##
 
 // HANDLER: On message submission
-document.querySelector('.form-msg')
-    .addEventListener('submit', sendMessage)
+document.querySelector(".form-msg").addEventListener("submit", sendMessage);
 
 // HANDLER: On room join
-document.querySelector('.form-join')
-    .addEventListener('submit', enterRoom)
+document.querySelector(".form-join").addEventListener("submit", enterRoom);
 
 // HANDLER: On typing state
-msgInput.addEventListener('keypress', () => {
-        socket.emit('activity', nameInput.value)
-    })
-
+msgInput.addEventListener("keypress", () => {
+  socket.emit("activity", nameInput.value);
+});
 
 // UPDATE: Show message to user
-function showMessage(name, text, time){
-    const li = getMessageComponent(name, username, text, time)
-    document.querySelector('.chat-display').appendChild(li)
-    chatDisplay.scrollTop = chatDisplay.scrollHeight
+function showMessage(name, text, time) {
+  const li = getMessageComponent(name, username, text, time);
+  document.querySelector(".chat-display").appendChild(li);
+  chatDisplay.scrollTop = chatDisplay.scrollHeight;
+}
+
+function showBroadcast(text) {
+  const li = getBroadcastComponent(text);
+  document.querySelector(".chat-display").appendChild(li);
+  chatDisplay.scrollTop = chatDisplay.scrollHeight;
 }
 
 // UPDATE: Show user list in the room
-function showUsers(users){
-    userList.innerHTML = getUserList(users)
+function showUsers(users) {
+  userList.innerHTML = getUserList(users);
 }
 
 // UPDATE: Show active room in the server
-function showRooms(rooms){
-    roomList.innerHTML = getRoomList(rooms)
+function showRooms(rooms) {
+  roomList.innerHTML = getRoomList(rooms);
 }
-
-
