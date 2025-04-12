@@ -1,6 +1,7 @@
 import {
   getBroadcastComponent,
   getMessageComponent,
+  getStickerComponent,
   getRoomList,
   getUserList,
   getSuperBoardcastComponent,
@@ -17,6 +18,7 @@ const userList = document.querySelector(".user-list");
 const roomList = document.querySelector(".room-list");
 const chatDisplay = document.querySelector(".chat-display");
 const superBroadcast = document.getElementById("superBroadcast-container");
+const stickerId = [":OIIA", ":Hamtaro", ":Rickroll"];
 
 let userName = "";
 let userId = "";
@@ -28,11 +30,19 @@ let userRoom = "";
 function sendMessage(e) {
   e.preventDefault();
   if (msgInput.value && nameInput.value && chatRoom.value) {
-    socket.emit("message", {
-      name: nameInput.value,
-      text: msgInput.value,
-    });
-    msgInput.value = "";
+    if (stickerId.includes(msgInput.value)) {
+      socket.emit("sticker", {
+        name: nameInput.value,
+        text: msgInput.value.slice(1),
+      });
+      msgInput.value = "";
+    } else {
+      socket.emit("message", {
+        name: nameInput.value,
+        text: msgInput.value,
+      });
+      msgInput.value = "";
+    }
   }
   msgInput.focus();
 }
@@ -69,6 +79,12 @@ socket.on("message", (data) => {
   activity.textContent = "";
   const { id, name, text, time } = data;
   showMessage(id, userId, name, text, time);
+});
+
+socket.on("sticker", (data) => {
+  activity.textContent = "";
+  const { id, name, text, time } = data;
+  showSticker(id, userId, name, text, time);
 });
 
 socket.on("broadcast", (data) => {
@@ -125,6 +141,12 @@ msgInput.addEventListener("keypress", () => {
 // UPDATE: Show message to user
 function showMessage(id, userId, name, text, time) {
   const li = getMessageComponent(id, userId, name, text, time);
+  document.querySelector(".chat-display").appendChild(li);
+  chatDisplay.scrollTop = chatDisplay.scrollHeight;
+}
+
+function showSticker(id, userId, name, stickId, time) {
+  const li = getStickerComponent(id, userId, name, stickId, time);
   document.querySelector(".chat-display").appendChild(li);
   chatDisplay.scrollTop = chatDisplay.scrollHeight;
 }

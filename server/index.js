@@ -184,6 +184,13 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("sticker", ({ name, text }) => {
+    const room = getUser(socket.id)?.room;
+    if (room) {
+      io.to(room).emit("sticker", buildMsg(socket.id, name, text));
+    }
+  });
+
   // listen for activity
   socket.on("activity", (name) => {
     const room = getUser(socket.id)?.room;

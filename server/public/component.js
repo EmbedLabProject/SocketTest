@@ -22,6 +22,48 @@ export function getMessageComponent(id, userId, name, text, time) {
   return li;
 }
 
+export function getStickerComponent(id, userId, name, stickerId, time) {
+  console.log(stickerId);
+  let imgsrc = "";
+  switch (stickerId) {
+    case "OIIA":
+      imgsrc = "./OIIA.gif";
+      break;
+    case "Hamtaro":
+      imgsrc = "./Hamtaro.gif";
+      break;
+
+    case "Rickroll":
+      imgsrc = "./Rickroll.gif";
+      break;
+
+    default:
+      imgsrc = "./OIIA.gif";
+  }
+
+  const li = document.createElement("li");
+  if (id === userId) {
+    li.innerHTML = `<div class="flex flex-row justify-end w-full">
+            <span class="post__header--name text-sm text-gray-500 font-medium">You</span>
+            </div>
+            <div class="post__text flex flex-row mt-1 my-3 gap-2 items-end justify-end w-full">
+            <p class="post__header--time font-light text-xs text-gray-500">${time}</p>
+            <img src="${imgsrc}" alt="Animated GIF" class="w-56 h-56 object-cover" />
+            </div>
+            `;
+  } else {
+    li.innerHTML = `<div class="flex flex-row justify-start w-full">
+            <span class="post__header--name font-medium text-sm text-gray-500">${name}</span>
+            </div>
+            <div class="post__text flex flex-row mt-1 my-3 gap-2 items-end justify-start w-full">
+            <img src="${imgsrc}" alt="Animated GIF" class="w-56 h-56 object-cover" />
+            <p class="post__header--time font-light text-xs text-gray-500">${time}</p>
+            </div>
+            `;
+  }
+  return li;
+}
+
 export function getSuperBoardcastComponent(text) {
   const box = document.createElement("div");
   box.className =
