@@ -11,6 +11,7 @@ const msgInput = document.querySelector("#message");
 const nameInput = document.querySelector("#name");
 const chatRoom = document.querySelector("#room");
 const activity = document.querySelector(".activity");
+const userGroupList = document.querySelector(".userGroup-list");
 const userList = document.querySelector(".user-list");
 const roomList = document.querySelector(".room-list");
 const chatDisplay = document.querySelector(".chat-display");
@@ -87,13 +88,17 @@ socket.on("activity", (name) => {
 });
 
 // HANDLER: Listen for user list in the room
-socket.on("userList", ({ users }) => {
-  showUsers(users);
+socket.on("userGroupList", ({ users }) => {
+  showGroupUsers(users);
 });
 
 // HANDLER: Listen for active room in the server
 socket.on("roomList", ({ rooms }) => {
   showRooms(rooms);
+});
+
+socket.on("userList", ({ users }) => {
+  showUsers(users);
 });
 
 // ## USER INTERFACE SECTION ##
@@ -123,6 +128,10 @@ function showBroadcast(text) {
 }
 
 // UPDATE: Show user list in the room
+function showGroupUsers(users) {
+  userGroupList.innerHTML = getUserList(users);
+}
+
 function showUsers(users) {
   userList.innerHTML = getUserList(users);
 }

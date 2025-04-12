@@ -60,12 +60,16 @@ io.on("connection", (socket) => {
       .to(user.room)
       .emit("broadcast", buildMsg("", "", `${user.name} has joined the room`));
 
-    io.to(user.room).emit("userList", {
+    io.to(user.room).emit("userGroupList", {
       users: getUserInRoom(user.room),
     });
 
     io.emit("roomList", {
       rooms: getAllActiveRoom(),
+    });
+
+    io.emit("userList", {
+      users: getAllUser(),
     });
 
     console.log(`${socket.id}(${name}) enter room ${room}`);
@@ -87,12 +91,16 @@ io.on("connection", (socket) => {
       buildMsg("", "", `${name} has left the room`)
     );
 
-    io.to(room).emit("userList", {
+    io.to(room).emit("userGroupList", {
       users: getUserInRoom(room),
     });
 
     io.emit("roomList", {
       rooms: getAllActiveRoom(),
+    });
+
+    io.emit("userList", {
+      users: getAllUser(),
     });
 
     console.log(`${socket.id}(${name}) leave room ${room}`);
@@ -111,12 +119,16 @@ io.on("connection", (socket) => {
       );
     }
 
-    io.to(room).emit("userList", {
+    io.to(room).emit("userGroupList", {
       users: getUserInRoom(room),
     });
 
     io.emit("roomList", {
       rooms: getAllActiveRoom(),
+    });
+
+    io.emit("userList", {
+      users: getAllUser(),
     });
 
     console.log(`${oldName} has change name to ${name} in room ${room}`);
@@ -136,13 +148,17 @@ io.on("connection", (socket) => {
       );
 
       // update user list
-      io.to(user.room).emit("userList", {
+      io.to(user.room).emit("userGroupList", {
         users: getUserInRoom(user.room),
       });
 
       // update room list
       io.emit("roomList", {
         rooms: getAllActiveRoom(),
+      });
+
+      io.emit("userList", {
+        users: getAllUser(),
       });
     }
 
@@ -200,6 +216,10 @@ function getUser(id) {
 
 function getUserInRoom(room) {
   return UserState.users.filter((user) => user.room === room);
+}
+
+function getAllUser() {
+  return UserState.users;
 }
 
 function getAllActiveRoom() {
