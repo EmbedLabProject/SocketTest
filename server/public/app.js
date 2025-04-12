@@ -1,9 +1,12 @@
 import {
   getBroadcastComponent,
-  getMessageComponent,
-  getStickerComponent,
+  getGroupMessageComponent,
+  getDirectMessageComponent,
+  getGroupStickerComponent,
+  getDirectStickerComponent,
   getRoomList,
   getUserList,
+  getChatList,
   getSuperBoardcastComponent,
 } from "./component.js";
 
@@ -18,6 +21,8 @@ const userList = document.querySelector(".user-list");
 const roomList = document.querySelector(".room-list");
 const chatDisplay = document.querySelector(".chat-display");
 const superBroadcast = document.getElementById("superBroadcast-container");
+const chatSelector = document.querySelector("#chat-selector");
+
 const stickerId = [":OIIA", ":Hamtaro", ":Rickroll"];
 
 let userName = "";
@@ -30,16 +35,19 @@ let userRoom = "";
 function sendMessage(e) {
   e.preventDefault();
   if (msgInput.value && nameInput.value && chatRoom.value) {
+    console.log(chatSelector.innerHTML);
     if (stickerId.includes(msgInput.value)) {
       socket.emit("sticker", {
         name: nameInput.value,
         text: msgInput.value.slice(1),
+        to: chatSelector.options[chatSelector.selectedIndex].id,
       });
       msgInput.value = "";
     } else {
       socket.emit("message", {
         name: nameInput.value,
         text: msgInput.value,
+        to: chatSelector.options[chatSelector.selectedIndex].id,
       });
       msgInput.value = "";
     }
@@ -75,16 +83,28 @@ socket.on("setId", (data) => {
 });
 
 // HANDLER: Listen for a message
-socket.on("message", (data) => {
+socket.on("groupMessage", (data) => {
   activity.textContent = "";
   const { id, name, text, time } = data;
-  showMessage(id, userId, name, text, time);
+  showGroupMessage(id, userId, name, text, time);
 });
 
-socket.on("sticker", (data) => {
+socket.on("directMessage", (data) => {
   activity.textContent = "";
   const { id, name, text, time } = data;
-  showSticker(id, userId, name, text, time);
+  showDirectMessage(id, userId, name, text, time);
+});
+
+socket.on("groupSticker", (data) => {
+  activity.textContent = "";
+  const { id, name, text, time } = data;
+  showGroupSticker(id, userId, name, text, time);
+});
+
+socket.on("directSticker", (data) => {
+  activity.textContent = "";
+  const { id, name, text, time } = data;
+  showDirectSticker(id, userId, name, text, time);
 });
 
 socket.on("broadcast", (data) => {
@@ -125,6 +145,10 @@ socket.on("userList", ({ users }) => {
   showUsers(users);
 });
 
+socket.on("chatList", ({ users }) => {
+  showChats(users);
+});
+
 // ## USER INTERFACE SECTION ##
 
 // HANDLER: On message submission
@@ -139,14 +163,26 @@ msgInput.addEventListener("keypress", () => {
 });
 
 // UPDATE: Show message to user
-function showMessage(id, userId, name, text, time) {
-  const li = getMessageComponent(id, userId, name, text, time);
+function showGroupMessage(id, userId, name, text, time) {
+  const li = getGroupMessageComponent(id, userId, name, text, time);
   document.querySelector(".chat-display").appendChild(li);
   chatDisplay.scrollTop = chatDisplay.scrollHeight;
 }
 
-function showSticker(id, userId, name, stickId, time) {
-  const li = getStickerComponent(id, userId, name, stickId, time);
+function showDirectMessage(id, userId, name, text, time) {
+  const li = getDirectMessageComponent(id, userId, name, text, time);
+  document.querySelector(".chat-display").appendChild(li);
+  chatDisplay.scrollTop = chatDisplay.scrollHeight;
+}
+
+function showGroupSticker(id, userId, name, stickId, time) {
+  const li = getGroupStickerComponent(id, userId, name, stickId, time);
+  document.querySelector(".chat-display").appendChild(li);
+  chatDisplay.scrollTop = chatDisplay.scrollHeight;
+}
+
+function showDirectSticker(id, userId, name, stickId, time) {
+  const li = getDirectStickerComponent(id, userId, name, stickId, time);
   document.querySelector(".chat-display").appendChild(li);
   chatDisplay.scrollTop = chatDisplay.scrollHeight;
 }
@@ -169,6 +205,10 @@ function showUsers(users) {
 // UPDATE: Show active room in the server
 function showRooms(rooms) {
   roomList.innerHTML = getRoomList(rooms);
+}
+
+function showChats(users) {
+  chatSelector.innerHTML = getChatList(users, userId);
 }
 
 function showSuperBroadcast(text, duration = 3000) {

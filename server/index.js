@@ -41,6 +41,7 @@ io.on("connection", (socket) => {
   // upon connection only to user
   socket.emit("setId", { id: socket.id });
   socket.emit("broadcast", buildMsg("", "", "Welcome to Chat App!"));
+  socket.emit("chatList", { users: getAllUser() });
 
   // when user are joining the room
   socket.on("enterRoom", ({ room }) => {
@@ -72,6 +73,10 @@ io.on("connection", (socket) => {
       users: getAllUser(),
     });
 
+    io.emit("chatList", {
+      users: getAllUser(),
+    });
+
     console.log(`${socket.id}(${name}) enter room ${room}`);
   });
 
@@ -100,6 +105,10 @@ io.on("connection", (socket) => {
     });
 
     io.emit("userList", {
+      users: getAllUser(),
+    });
+
+    io.emit("chatList", {
       users: getAllUser(),
     });
 
@@ -135,6 +144,10 @@ io.on("connection", (socket) => {
       users: getAllUser(),
     });
 
+    io.emit("chatList", {
+      users: getAllUser(),
+    });
+
     console.log(`${oldName} has change name to ${name} in room ${room}`);
   });
 
@@ -151,43 +164,57 @@ io.on("connection", (socket) => {
 
     userLeavesApp(socket.id);
 
-    if (user) {
-      // notify to all others in the room
-      io.to(user.room).emit(
-        "broadcast",
-        buildMsg("", "", `${user.name} has left the room`)
-      );
+    if (!user) return;
 
-      // update user list
-      io.to(user.room).emit("userGroupList", {
-        users: getUserInRoom(user.room),
-      });
+    // notify to all others in the room
+    io.to(user.room).emit(
+      "broadcast",
+      buildMsg("", "", `${user.name} has left the room`)
+    );
 
-      // update room list
-      io.emit("roomList", {
-        rooms: getAllActiveRoom(),
-      });
+    // update user list
+    io.to(user.room).emit("userGroupList", {
+      users: getUserInRoom(user.room),
+    });
 
-      io.emit("userList", {
-        users: getAllUser(),
-      });
-    }
+    // update room list
+    io.emit("roomList", {
+      rooms: getAllActiveRoom(),
+    });
+
+    io.emit("userList", {
+      users: getAllUser(),
+    });
+
+    io.emit("chatList", {
+      users: getAllUser(),
+    });
 
     console.log(`User ${socket.id} disconnected`);
   });
 
   // listening for a message event
-  socket.on("message", ({ name, text }) => {
-    const room = getUser(socket.id)?.room;
-    if (room) {
-      io.to(room).emit("message", buildMsg(socket.id, name, text));
+  socket.on("message", ({ name, text, to }) => {
+    if (to === "group") {
+      const room = getUser(socket.id)?.room;
+      if (room) {
+        io.to(room).emit("groupMessage", buildMsg(socket.id, name, text));
+      }
+    } else {
+      socket.emit("directMessage", buildMsg(socket.id, name, text));
+      io.to(to).emit("directMessage", buildMsg(socket.id, name, text));
     }
   });
 
-  socket.on("sticker", ({ name, text }) => {
-    const room = getUser(socket.id)?.room;
-    if (room) {
-      io.to(room).emit("sticker", buildMsg(socket.id, name, text));
+  socket.on("sticker", ({ name, text, to }) => {
+    if (to === "group") {
+      const room = getUser(socket.id)?.room;
+      if (room) {
+        io.to(room).emit("groupSticker", buildMsg(socket.id, name, text));
+      }
+    } else {
+      socket.emit("directSticker", buildMsg(socket.id, name, text));
+      io.to(to).emit("directSticker", buildMsg(socket.id, name, text));
     }
   });
 

@@ -1,4 +1,4 @@
-export function getMessageComponent(id, userId, name, text, time) {
+export function getGroupMessageComponent(id, userId, name, text, time) {
   const li = document.createElement("li");
   if (id === userId) {
     li.innerHTML = `<div class="flex flex-row justify-end w-full">
@@ -22,7 +22,33 @@ export function getMessageComponent(id, userId, name, text, time) {
   return li;
 }
 
-export function getStickerComponent(id, userId, name, stickerId, time) {
+export function getDirectMessageComponent(id, userId, name, text, time) {
+  const li = document.createElement("li");
+  if (id === userId) {
+    li.innerHTML = `<div class="flex flex-row justify-end w-full">
+            <span class="post__header--name text-sm text-gray-500 font-medium">You</span>
+            <span class="post__header--name text-sm text-red-400 font-medium">{private}</span>
+            </div>
+            <div class="post__text flex flex-row mt-1 my-3 gap-2 items-end justify-end w-full">
+            <p class="post__header--time font-light text-xs text-gray-500">${time}</p>
+            <p class="w-fit max-w-48 bg-green-500 rounded-lg px-3 py-1 break-all">${text}</p>
+            </div>
+            `;
+  } else {
+    li.innerHTML = `<div class="flex flex-row justify-start w-full">
+            <span class="post__header--name font-medium text-sm text-gray-500">${name}</span>
+            <span class="post__header--name text-sm text-red-400 font-medium">{private}</span>
+            </div>
+            <div class="post__text flex flex-row mt-1 my-3 gap-2 items-end justify-start w-full">
+            <p class="w-fit max-w-48 bg-blue-400 rounded-lg px-3 py-1 break-all">${text}</p>
+            <p class="post__header--time font-light text-xs text-gray-500">${time}</p>
+            </div>
+            `;
+  }
+  return li;
+}
+
+export function getGroupStickerComponent(id, userId, name, stickerId, time) {
   console.log(stickerId);
   let imgsrc = "";
   switch (stickerId) {
@@ -64,6 +90,50 @@ export function getStickerComponent(id, userId, name, stickerId, time) {
   return li;
 }
 
+export function getDirectStickerComponent(id, userId, name, stickerId, time) {
+  console.log(stickerId);
+  let imgsrc = "";
+  switch (stickerId) {
+    case "OIIA":
+      imgsrc = "./OIIA.gif";
+      break;
+    case "Hamtaro":
+      imgsrc = "./Hamtaro.gif";
+      break;
+
+    case "Rickroll":
+      imgsrc = "./Rickroll.gif";
+      break;
+
+    default:
+      imgsrc = "./OIIA.gif";
+  }
+
+  const li = document.createElement("li");
+  if (id === userId) {
+    li.innerHTML = `<div class="flex flex-row justify-end w-full">
+            <span class="post__header--name text-sm text-gray-500 font-medium">You</span>
+            <span class="post__header--name text-sm text-red-400 font-medium">{private}</span>
+            </div>
+            <div class="post__text flex flex-row mt-1 my-3 gap-2 items-end justify-end w-full">
+            <p class="post__header--time font-light text-xs text-gray-500">${time}</p>
+            <img src="${imgsrc}" alt="Animated GIF" class="w-56 h-56 object-cover" />
+            </div>
+            `;
+  } else {
+    li.innerHTML = `<div class="flex flex-row justify-start w-full">
+            <span class="post__header--name font-medium text-sm text-gray-500">${name}</span>
+            <span class="post__header--name text-sm text-red-400 font-medium">{private}</span>
+            </div>
+            <div class="post__text flex flex-row mt-1 my-3 gap-2 items-end justify-start w-full">
+            <img src="${imgsrc}" alt="Animated GIF" class="w-56 h-56 object-cover" />
+            <p class="post__header--time font-light text-xs text-gray-500">${time}</p>
+            </div>
+            `;
+  }
+  return li;
+}
+
 export function getSuperBoardcastComponent(text) {
   const box = document.createElement("div");
   box.className =
@@ -93,6 +163,17 @@ export function getUserList(users) {
   if (users) {
     users.forEach((user, i) => {
       list += `<li>${user.name}</li>`;
+    });
+  }
+  return list;
+}
+
+export function getChatList(users, userId) {
+  let list = `<option id="group">[Group Chat]</option>`;
+  if (users) {
+    users.forEach((user, i) => {
+      if (user.id !== userId)
+        list += `<option id=${user.id}>${user.name}</option>`;
     });
   }
   return list;
