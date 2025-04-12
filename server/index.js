@@ -43,55 +43,83 @@ io.on("connection", (socket) => {
   socket.emit("broadcast", buildMsg("", "", "Welcome to Chat App!"));
 
   // when user are joining the room
-  socket.on("enterRoom", ({ name, room }) => {
+  socket.on("enterRoom", ({ room }) => {
     //leave prev room
-    console.log(`${socket.id}(${name}) enter room ${room}`);
-    const prevRoom = getUser(socket.id)?.room;
+    const name = getUser(socket.id)?.name;
 
-    // notify user in prev room about leaving the room
-    if (prevRoom) {
-      socket.leave(prevRoom);
-      io.to(prevRoom).emit(
-        "broadcast",
-        buildMsg("", "", `${name} has left the room`)
-      );
-    }
-
-    // cannot update previous room users list until after the state update in activate user
-
-    // update all user information (mainly fot room)
     const user = activateUser(socket.id, name, room);
 
-    // update userlist in prev room
-    if (prevRoom) {
-      io.to(prevRoom).emit("userList", {
-        users: getUserInRoom(prevRoom),
-      });
-    }
-
-    // user join room
     socket.join(user.room);
 
-    // notify to user who joined the room
     socket.emit(
       "broadcast",
       buildMsg("", "", `You have joined the ${user.room} chat room`)
     );
 
-    // notify to everyone else in the room
     socket.broadcast
       .to(user.room)
       .emit("broadcast", buildMsg("", "", `${user.name} has joined the room`));
 
-    // update user list for this room
     io.to(user.room).emit("userList", {
       users: getUserInRoom(user.room),
     });
 
-    // update room list for everyone
     io.emit("roomList", {
       rooms: getAllActiveRoom(),
     });
+
+    console.log(`${socket.id}(${name}) enter room ${room}`);
+  });
+
+  socket.on("leaveRoom", () => {
+    const room = getUser(socket.id)?.room;
+    const name = getUser(socket.id)?.name;
+
+    // notify user in prev room about leaving the room
+    if (!room) return;
+
+    const user = activateUser(socket.id, name, "");
+
+    socket.leave(room);
+
+    io.to(room).emit(
+      "broadcast",
+      buildMsg("", "", `${name} has left the room`)
+    );
+
+    io.to(room).emit("userList", {
+      users: getUserInRoom(room),
+    });
+
+    io.emit("roomList", {
+      rooms: getAllActiveRoom(),
+    });
+
+    console.log(`${socket.id}(${name}) leave room ${room}`);
+  });
+
+  socket.on("changeName", ({ name }) => {
+    const room = getUser(socket.id)?.room;
+    const oldName = getUser(socket.id)?.name;
+
+    const user = activateUser(socket.id, name, room);
+
+    if (room) {
+      io.to(room).emit(
+        "broadcast",
+        buildMsg("", "", `${oldName} has change name to ${name}`)
+      );
+    }
+
+    io.to(room).emit("userList", {
+      users: getUserInRoom(room),
+    });
+
+    io.emit("roomList", {
+      rooms: getAllActiveRoom(),
+    });
+
+    console.log(`${oldName} has change name to ${name} in room ${room}`);
   });
 
   // when user disconnects

@@ -17,6 +17,7 @@ const chatDisplay = document.querySelector(".chat-display");
 
 let userName = "";
 let userId = "";
+let userRoom = "";
 
 // ## SOCKET SECTION ##
 
@@ -37,11 +38,22 @@ function sendMessage(e) {
 function enterRoom(e) {
   e.preventDefault();
   if (nameInput.value && chatRoom.value) {
-    userName = nameInput.value;
-    socket.emit("enterRoom", {
-      name: nameInput.value,
-      room: chatRoom.value,
-    });
+    const name = nameInput.value;
+    const room = chatRoom.value;
+
+    if (name !== userName && room !== userRoom) {
+      socket.emit("leaveRoom", {});
+      socket.emit("changeName", { name: name });
+      socket.emit("enterRoom", { room: room });
+    } else if (name !== userName) {
+      socket.emit("changeName", { name: name });
+    } else if (room !== userRoom) {
+      socket.emit("leaveRoom", {});
+      socket.emit("enterRoom", { room: room });
+    }
+
+    userName = name;
+    userRoom = room;
   }
 }
 
