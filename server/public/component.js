@@ -1,6 +1,6 @@
-export function getMessageComponent(name, username, text, time) {
+export function getMessageComponent(id, userId, name, text, time) {
   const li = document.createElement("li");
-  if (name === username) {
+  if (id === userId) {
     li.innerHTML = `<div class="flex flex-row justify-end w-full">
             <span class="post__header--name text-sm text-gray-500 font-medium">You</span>
             </div>

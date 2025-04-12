@@ -2,6 +2,7 @@ import express from "express";
 import { Server } from "socket.io";
 import path from "path";
 import { fileURLToPath } from "url";
+import { SocketAddress } from "net";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,14 +36,16 @@ const io = new Server(expressServer, {
 
 io.on("connection", (socket) => {
   console.log(`User ${socket.id} connected`);
+  const user = activateUser(socket.id, "", "");
 
   // upon connection only to user
-  socket.emit("broadcast", buildMsg("", "Welcome to Chat App!"));
+  socket.emit("setId", { id: socket.id });
+  socket.emit("broadcast", buildMsg("", "", "Welcome to Chat App!"));
 
   // when user are joining the room
   socket.on("enterRoom", ({ name, room }) => {
     //leave prev room
-    console.log(`${name} enter room ${room}`);
+    console.log(`${socket.id}(${name}) enter room ${room}`);
     const prevRoom = getUser(socket.id)?.room;
 
     // notify user in prev room about leaving the room
@@ -50,7 +53,7 @@ io.on("connection", (socket) => {
       socket.leave(prevRoom);
       io.to(prevRoom).emit(
         "broadcast",
-        buildMsg("", `${name} has left the room`)
+        buildMsg("", "", `${name} has left the room`)
       );
     }
 
@@ -72,13 +75,13 @@ io.on("connection", (socket) => {
     // notify to user who joined the room
     socket.emit(
       "broadcast",
-      buildMsg("", `You have joined the ${user.room} chat room`)
+      buildMsg("", "", `You have joined the ${user.room} chat room`)
     );
 
     // notify to everyone else in the room
     socket.broadcast
       .to(user.room)
-      .emit("broadcast", buildMsg("", `${user.name} has joined the room`));
+      .emit("broadcast", buildMsg("", "", `${user.name} has joined the room`));
 
     // update user list for this room
     io.to(user.room).emit("userList", {
@@ -101,7 +104,7 @@ io.on("connection", (socket) => {
       // notify to all others in the room
       io.to(user.room).emit(
         "broadcast",
-        buildMsg("", `${user.name} has left the room`)
+        buildMsg("", "", `${user.name} has left the room`)
       );
 
       // update user list
@@ -122,7 +125,7 @@ io.on("connection", (socket) => {
   socket.on("message", ({ name, text }) => {
     const room = getUser(socket.id)?.room;
     if (room) {
-      io.to(room).emit("message", buildMsg(name, text));
+      io.to(room).emit("message", buildMsg(socket.id, name, text));
     }
   });
 
@@ -136,8 +139,9 @@ io.on("connection", (socket) => {
 });
 
 // Message format
-function buildMsg(name, text) {
+function buildMsg(id, name, text) {
   return {
+    id,
     name,
     text,
     time: new Intl.DateTimeFormat("default", {

@@ -15,7 +15,8 @@ const userList = document.querySelector(".user-list");
 const roomList = document.querySelector(".room-list");
 const chatDisplay = document.querySelector(".chat-display");
 
-let username = "User";
+let userName = "";
+let userId = "";
 
 // ## SOCKET SECTION ##
 
@@ -36,7 +37,7 @@ function sendMessage(e) {
 function enterRoom(e) {
   e.preventDefault();
   if (nameInput.value && chatRoom.value) {
-    username = nameInput.value;
+    userName = nameInput.value;
     socket.emit("enterRoom", {
       name: nameInput.value,
       room: chatRoom.value,
@@ -44,16 +45,18 @@ function enterRoom(e) {
   }
 }
 
+socket.on("setId", (data) => {
+  userId = data.id;
+});
+
 // HANDLER: Listen for a message
 socket.on("message", (data) => {
-  console.log("meessage");
   activity.textContent = "";
-  const { name, text, time } = data;
-  showMessage(name, text, time);
+  const { id, name, text, time } = data;
+  showMessage(id, userId, name, text, time);
 });
 
 socket.on("broadcast", (data) => {
-  console.log("broadcast");
   activity.textContent = "";
   const { text } = data;
   showBroadcast(text);
@@ -95,8 +98,8 @@ msgInput.addEventListener("keypress", () => {
 });
 
 // UPDATE: Show message to user
-function showMessage(name, text, time) {
-  const li = getMessageComponent(name, username, text, time);
+function showMessage(id, userId, name, text, time) {
+  const li = getMessageComponent(id, userId, name, text, time);
   document.querySelector(".chat-display").appendChild(li);
   chatDisplay.scrollTop = chatDisplay.scrollHeight;
 }
