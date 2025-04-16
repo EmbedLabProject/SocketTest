@@ -10,7 +10,7 @@ import {
   getSuperBoardcastComponent,
 } from "./component.js";
 
-const socket = io("ws://localhost:3500");
+const socket = io("https://sockettest2-scuy.onrender.com");
 
 const msgInput = document.querySelector("#message");
 const nameInput = document.querySelector("#name");
