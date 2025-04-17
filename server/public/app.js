@@ -8,9 +8,13 @@ import {
   getUserList,
   getChatList,
   getSuperBoardcastComponent,
+  getAlertComponent,
 } from "./component.js";
 
-const socket = io("https://sockettest2-scuy.onrender.com");
+
+// const socket = io("ws://localhost:3500");
+const socket = io("https://www.chat.ttontoey.com/");
+
 
 const msgInput = document.querySelector("#message");
 const nameInput = document.querySelector("#name");
@@ -28,31 +32,45 @@ const stickerId = [":OIIA", ":Hamtaro", ":Rickroll"];
 let userName = "";
 let userId = "";
 let userRoom = "";
+let typingUsers = new Map();
 
 // ## SOCKET SECTION ##
+function containsHTML(str) {
+  return /<\/?[a-z][\s\S]*>/i.test(str);
+}
+
+function containsScriptTag(str) {
+  return /<\s*script.*?>.*?<\s*\/\s*script\s*>/gis.test(str);
+}
 
 // SENDER: Send message to server
 function sendMessage(e) {
   e.preventDefault();
-  if (msgInput.value && nameInput.value && chatRoom.value) {
-    console.log(chatSelector.innerHTML);
-    if (stickerId.includes(msgInput.value)) {
+  const name = nameInput.value.trim();
+  const msg = msgInput.value.trim();
+  const roomId = chatSelector.options[chatSelector.selectedIndex].id;
+
+  if (msg && name && chatRoom.value) {
+    if (containsHTML(msg) || containsScriptTag(msg)) {
+      showAlert("Attack attempt detected, dialed 191 successfully");
+    }
+    else if (stickerId.includes(msg)) {
       socket.emit("sticker", {
-        name: nameInput.value,
-        text: msgInput.value.slice(1),
-        to: chatSelector.options[chatSelector.selectedIndex].id,
+        name: name,
+        text: msg.slice(1),
+        to: roomId,
       });
-      msgInput.value = "";
     } else {
       socket.emit("message", {
-        name: nameInput.value,
-        text: msgInput.value,
-        to: chatSelector.options[chatSelector.selectedIndex].id,
+        name: name,
+        text: msg,
+        to: roomId,
       });
-      msgInput.value = "";
     }
+    msgInput.value = "";
+    msgInput.focus();
   }
-  msgInput.focus();
+  
 }
 
 // SENDER: Send room name that user want to join to server
@@ -120,16 +138,31 @@ socket.on("superBroadcast", (data) => {
 });
 
 // HANDLER: Listen for typing event from other user
-let activityTimer;
-socket.on("activity", (name) => {
-  activity.textContent = `${name} is typing...`;
 
-  // Clear after 10 sec passed
-  clearTimeout(activityTimer);
-  activityTimer = setTimeout(() => {
-    activity.textContent = "";
+socket.on("activity", (name) => {
+  if (typingUsers.has(name)) {
+    clearTimeout(typingUsers.get(name));
+  }
+
+  const timer = setTimeout(() => {
+    typingUsers.delete(name);
+    updateTypingMessage();
   }, 10000);
+
+  typingUsers.set(name, timer);
+  updateTypingMessage();
 });
+
+function updateTypingMessage() {
+  const names = Array.from(typingUsers.keys());
+  if (names.length === 0) {
+    activity.textContent = "";
+  } else if (names.length === 1) {
+    activity.textContent = `${names[0]} is typing...`;
+  } else {
+    activity.textContent = `${names.join(", ")} are typing...`;
+  }
+}
 
 // HANDLER: Listen for user list in the room
 socket.on("userGroupList", ({ users }) => {
@@ -199,11 +232,13 @@ function showGroupUsers(users) {
 }
 
 function showUsers(users) {
+  if(users[0].name == "" && users.length == 1) return
   userList.innerHTML = getUserList(users);
 }
 
 // UPDATE: Show active room in the server
 function showRooms(rooms) {
+  if(rooms[0] == "" && rooms.length == 1) return
   roomList.innerHTML = getRoomList(rooms);
 }
 
@@ -213,6 +248,24 @@ function showChats(users) {
 
 function showSuperBroadcast(text, duration = 3000) {
   const box = getSuperBoardcastComponent(text);
+  superBroadcast.prepend(box);
+
+  requestAnimationFrame(() => {
+    box.classList.remove("-translate-y-full", "opacity-0");
+    box.classList.add("translate-y-0", "opacity-100");
+  });
+
+  setTimeout(() => {
+    box.classList.remove("translate-y-0", "opacity-100");
+    box.classList.add("-translate-y-full", "opacity-0");
+    setTimeout(() => {
+      box.remove();
+    }, 500);
+  }, duration);
+}
+
+function showAlert(text, duration = 3000) {
+  const box = getAlertComponent(text)
   superBroadcast.prepend(box);
 
   requestAnimationFrame(() => {
