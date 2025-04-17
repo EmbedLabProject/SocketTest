@@ -49,7 +49,7 @@ export function getDirectMessageComponent(id, userId, name, text, time) {
 }
 
 export function getGroupStickerComponent(id, userId, name, stickerId, time) {
-  console.log(stickerId);
+  // console.log(stickerId);
   let imgsrc = "";
   switch (stickerId) {
     case "OIIA":
@@ -91,7 +91,7 @@ export function getGroupStickerComponent(id, userId, name, stickerId, time) {
 }
 
 export function getDirectStickerComponent(id, userId, name, stickerId, time) {
-  console.log(stickerId);
+  // console.log(stickerId);
   let imgsrc = "";
   switch (stickerId) {
     case "OIIA":
@@ -177,4 +177,13 @@ export function getChatList(users, userId) {
     });
   }
   return list;
+}
+
+
+export function getAlertComponent(text) {
+  const box = document.createElement("div");
+  box.className =
+    "w-fit max-w-[90%] bg-red-600 rounded-3xl px-4 py-2 break-words text-white mt-4 transition-all duration-500 transform -translate-y-4 opacity-0 pointer-events-auto shadow-md z-50";
+  box.innerHTML = text;
+  return box
 }

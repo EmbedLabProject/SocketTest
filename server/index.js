@@ -233,10 +233,11 @@ function buildMsg(id, name, text) {
     id,
     name,
     text,
-    time: new Intl.DateTimeFormat("default", {
-      hour: "numeric",
-      minute: "numeric",
-      second: "numeric",
+    time: new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "Asia/Bangkok",
     }).format(new Date()),
   };
 }
