@@ -12,8 +12,8 @@ import {
 } from "./component.js";
 
 
-// const socket = io("ws://localhost:3500");
-const socket = io("https://www.chat.ttontoey.com/");
+const socket = io("ws://localhost:3500");
+// const socket = io("https://www.chat.ttontoey.com/");
 
 
 const msgInput = document.querySelector("#message");
