@@ -12,8 +12,8 @@ import {
 } from "./component.js";
 
 
-const socket = io("ws://localhost:3500");
-// const socket = io("https://www.chat.ttontoey.com/");
+// const socket = io("ws://localhost:3500");
+const socket = io("https://www.chat.ttontoey.com/");
 
 
 const msgInput = document.querySelector("#message");
@@ -50,9 +50,12 @@ function sendMessage(e) {
   const msg = msgInput.value.trim();
   const roomId = chatSelector.options[chatSelector.selectedIndex].id;
 
-  if (msg && name && chatRoom.value) {
+  if (msg && name) {
     if (containsHTML(msg) || containsScriptTag(msg)) {
       showAlert("Attack attempt detected, dialed 191 successfully");
+    }
+    else if(roomId == "group" && chatRoom.value.trim() == ""){
+      showAlert("Join some room first!");
     }
     else if (stickerId.includes(msg)) {
       socket.emit("sticker", {
@@ -76,10 +79,9 @@ function sendMessage(e) {
 // SENDER: Send room name that user want to join to server
 function enterRoom(e) {
   e.preventDefault();
-  if (nameInput.value && chatRoom.value) {
-    const name = nameInput.value;
-    const room = chatRoom.value;
-
+  const name = nameInput.value.trim();
+  const room = chatRoom.value.trim();
+  if (name && room) {
     if (name !== userName && room !== userRoom) {
       socket.emit("leaveRoom", {});
       socket.emit("changeName", { name: name });
@@ -93,6 +95,12 @@ function enterRoom(e) {
 
     userName = name;
     userRoom = room;
+  }
+  else if (name && name !== userName){
+    socket.emit("changeName", { name: name });
+  }
+  else{
+    showAlert("PLEASE ENTER USERNAME")
   }
 }
 
