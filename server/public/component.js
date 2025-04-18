@@ -56,11 +56,11 @@ export function getGroupStickerComponent(id, userId, name, stickerId, time) {
       imgsrc = "./OIIA.gif";
       break;
     case "Hamtaro":
-      imgsrc = "./Hamtaro.gif";
+      imgsrc = "./hamtaro.gif";
       break;
 
     case "Rickroll":
-      imgsrc = "./Rickroll.gif";
+      imgsrc = "./rickroll.gif";
       break;
 
     default:
@@ -98,11 +98,11 @@ export function getDirectStickerComponent(id, userId, name, stickerId, time) {
       imgsrc = "./OIIA.gif";
       break;
     case "Hamtaro":
-      imgsrc = "./Hamtaro.gif";
+      imgsrc = "./hamtaro.gif";
       break;
 
     case "Rickroll":
-      imgsrc = "./Rickroll.gif";
+      imgsrc = "./rickroll.gif";
       break;
 
     default:
